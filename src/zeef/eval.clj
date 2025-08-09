@@ -75,6 +75,10 @@
    during evaluation. `resolver` is called with the argument passed to the
    predicate function and the name of the field as a keyword.
    
+   There are two arities:
+   - `(compile-expression expr)` uses `clojure.core/get` as the default resolver.
+   - `(compile-expression expr resolver)` allows specifying a custom resolver.
+
    Throws an `ExceptionInfo` with message \"Invalid expression.\" if `expr` is
    not a valid expression. The exception contains additional information:
    - `:expr` - The invalid expression
@@ -91,18 +95,20 @@
                {:id 5 :text \"c\"}]]
      (eduction (comp (filter pred) (map :text)) data)) => (\"a\" \"b\")
    ```"
-  [expr resolver]
-  (when-not (zf/expression? expr)
-    (throw (ex-info "Invalid expression."
-                    {:expr expr
-                     :explanation (s/explain-str ::zs/expression expr)
-                     :spec ::zs/expression})))
-  (let [m (gensym)
-        form `(fn [~m]
-                ~(walk/postwalk
-                  (fn [node]
-                    (if (instance? Field node)
-                      `(~resolver ~m ~(.name node))
-                      node))
-                  (transform-expression expr)))]
-    (eval form)))
+  ([expr]
+   (compile-expression expr get))
+  ([expr resolver]
+   (when-not (zf/expression? expr)
+     (throw (ex-info "Invalid expression."
+                     {:expr expr
+                      :explanation (s/explain-str ::zs/expression expr)
+                      :spec ::zs/expression})))
+   (let [m (gensym)
+         form `(fn [~m]
+                 ~(walk/postwalk
+                   (fn [node]
+                     (if (instance? Field node)
+                       `(~resolver ~m ~(.name node))
+                       node))
+                   (transform-expression expr)))]
+     (eval form))))

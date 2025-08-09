@@ -26,6 +26,22 @@
            (gen/choose 1 10)
            {:num-elements 1}))
 
+;;;; resolver
+
+(deftest test-resolver
+  (let [expr [:= (zf/field :a) "a"]
+        m {:a "a"}]
+    (testing "default resolver"
+      (let [pred (compile-expression expr)]
+        (is (pred m))))
+
+    (testing "customer resolver"
+      (let [;called (volatile! 0)
+            pred (compile-expression expr
+                                     (fn [v k]
+                                       (k v)))]
+        (is (pred m))))))
+
 ;;;; test conditions
 
 ;;; test nil?
@@ -36,7 +52,7 @@
                                  (gen/tuple gen/keyword gen/keyword gen/any))]
     (test-property (prop/for-all [[k1 k2 v] tuple-gen]
                      (let [expr [:nil? (zf/field k1)]
-                           pred (compile-expression expr get)]
+                           pred (compile-expression expr)]
                        (and (not (pred {k1 v}))
                             (pred {k2 v})))))))
 
@@ -48,7 +64,7 @@
     (letfn [(test [op]
               (test-property (prop/for-all [[m v] tuple-gen]
                                (let [expr [op (zf/field :a) v]
-                                     pred (compile-expression expr get)
+                                     pred (compile-expression expr)
                                      f (ns-resolve 'clojure.core (symbol op))]
                                  (= (f (:a m) v) (pred m))))))]
       (testing ":<"
@@ -80,7 +96,7 @@
     (letfn [(test [k pred]
               (test-property (prop/for-all [[m s] tuple-gen]
                                (let [expr [k (zf/field :a) s]
-                                     compiled-expr (compile-expression expr get)]
+                                     compiled-expr (compile-expression expr)]
                                  (= (pred (:a m) s) (compiled-expr m))))))]
       (testing ":starts-with?"
         (test :starts-with? str/starts-with?))
@@ -98,7 +114,7 @@
     (test-property (prop/for-all [m (simple-map-gen)
                                   coll (gen/vector (gen/choose 1 10))]
                      (let [expr [:in? (zf/field :a) coll]
-                           pred (compile-expression expr get)]
+                           pred (compile-expression expr)]
                        (= (boolean (some (fn [v]
                                            (= (:a m) v))
                                          coll))
@@ -112,7 +128,7 @@
                                   start gen/small-integer
                                   end gen/small-integer]
                      (let [expr [:between? (zf/field :a) start end]
-                           pred (compile-expression expr get)]
+                           pred (compile-expression expr)]
                        (= (<= start (:a m) end) (pred m)))))))
 
 ;;;; logical operators
@@ -121,7 +137,7 @@
   (testing "unary"
     (test-property (prop/for-all [a gen/small-integer]
                      (let [expr [:not [:= (zf/field :a) a]]
-                           pred (compile-expression expr get)]
+                           pred (compile-expression expr)]
                        (not (pred {:a a}))))))
 
   (testing "nary"
@@ -133,5 +149,5 @@
                                  [:= b (zf/field :b)]
                                  [:or
                                   [:= (zf/field :c) c]]]
-                           pred (compile-expression expr get)]
+                           pred (compile-expression expr)]
                        (pred {:a a :b b :c c}))))))
