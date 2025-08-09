@@ -1,4 +1,4 @@
-# Zeef
+# zeef
 
 zeef is a DSL for filter expressions in Clojure. It provides a unified and declarative way to define and evaluate conditions and logical expressions.
 
@@ -32,17 +32,30 @@ Logical expressions combine conditions or other logical expressions. Examples:
 
 ## Example
 
-Here is an example of how to use zeef:
+Here is an example of how to use zeef. It defines a filter that checks if the age is less than 30 and the name starts with "A", then compiles it into an executable predicate function and applies it to a collection of data.
 
 ```clojure
-(require '[zeef.core :as zf])
+(require '[zeef.core :as zf]
+         '[zeef.eval :as ze])
 
+;; define a filter expression
 (def my-filter
   (zf/z-and
     (zf/z-< (zf/field :age) 30)
     (zf/z-starts-with? (zf/field :name) "A")))
 
-(println "Filter expression is valid:" (zf/expression? my-filter))
-```
+;; compile the expression into a predicate function
+(def predicate (ze/compile-expression my-filter get))
 
-This example defines a filter that checks if the age is less than 30 and the name starts with "A".
+;; sample data
+(def people
+  [{:name "Alice" :age 25}
+   {:name "Bob" :age 35}
+   {:name "Anna" :age 28}
+   {:name "Charlie" :age 22}])
+
+;; filter the data using the compiled predicate
+(filter predicate people)
+
+;; => ({:name "Alice", :age 25} {:name "Anna", :age 28})
+```
