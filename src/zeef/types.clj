@@ -1,3 +1,3 @@
 (ns zeef.types)
 
-(defrecord Field [name])
+(deftype Field [name])
