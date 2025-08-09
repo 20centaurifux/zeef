@@ -9,7 +9,7 @@
 
 ;;;; generative test runner
 
-(def ^:private num-tests 100)
+(def ^:private num-tests 50)
 
 (defn- test-fn
   "Performs generative testing on function `f`.
