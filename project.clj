@@ -4,8 +4,9 @@
   :license {:name "AGPLv3"
             :url "https://www.gnu.org/licenses/agpl-3.0"}
   :dependencies [[org.clojure/clojure "1.11.1"]
-                 [org.clojure/test.check "1.1.1"]]
+                 [org.clojure/test.check "1.1.1"]
+                 [camel-snake-kebab "0.4.3"]
+                 [metosin/malli "0.19.1"]]
   :target-path "target/%s"
-  :profiles {:test {:dependencies [[org.clojure/math.combinatorics "0.3.0"]]}}
   :plugins [[lein-cljfmt "0.9.2"]]
   :cljfmt {:load-config-file? true})

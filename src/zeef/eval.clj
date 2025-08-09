@@ -1,44 +1,9 @@
 (ns zeef.eval
-  (:require [clojure.spec.alpha :as s]
-            [clojure.string :as str]
-            [clojure.walk :as walk]
+  (:require [clojure.walk :as walk]
+            [malli.core :as m]
+            [malli.error :as me]
             [zeef.core :as zf]
-            [zeef.specs]
-            [zeef.types])
-  (:import [zeef.types Field]))
-
-(alias 'zs 'zeef.specs)
-
-;;;; transformation
-
-(declare transform-expression)
-
-;;; conditions
-
-(defmulti ^:private transform-condition first)
-
-(defmethod transform-condition :starts-with?
-  [[_ x substr]]
-  `(str/starts-with? ~x ~substr))
-
-(defmethod transform-condition :ends-with?
-  [[_ x substr]]
-  `(str/ends-with? ~x ~substr))
-
-(defmethod transform-condition :includes?
-  [[_ x substr]]
-  `(str/includes? ~x ~substr))
-
-(defmethod transform-condition :between?
-  [[_ x lo hi]]
-  `(clojure.core/<= ~lo ~x ~hi))
-
-(defmethod transform-condition :in?
-  [[_ needle haystack]]
-  `(clojure.core/boolean
-    (clojure.core/some (fn [v#]
-                         (= v# ~needle))
-                       ~haystack)))
+            [zeef.schema :as zs]))
 
 (defn- resolve-op
   [ns op]
@@ -47,24 +12,72 @@
     (throw (ex-info "Couldn't resolve symbol."
                     {:sym (symbol op)}))))
 
-(defmethod transform-condition :default
+(defn- transform-condition
+  [[op & args]]
+  (cond
+    (#{:starts-with? :ends-with? :includes?} op)
+    (cons (resolve-op 'clojure.string op) args)
+
+    (= op :between?)
+    (let [[x lo hi] args]
+      `(clojure.core/<= ~lo ~x ~hi))
+
+    (= op :in?)
+    (let [[needle haystack] args]
+      `(clojure.core/boolean
+        (clojure.core/some (fn [v#]
+                             (= v# ~needle))
+                           ~haystack)))
+
+    :else
+    (cons (resolve-op 'clojure.core op) args)))
+
+(defn- transform-logical-operator
   [[op & args]]
   (cons (resolve-op 'clojure.core op) args))
 
-;;; operations
+(defn- transform-satisfies?
+  [sym resolver [_ field expr]]
+  `(let [~sym (~resolver ~sym ~(.name field))]
+     ~expr))
 
-(defn- transform-operation
-  [[op & args]]
-  (cons (resolve-op 'clojure.core op)
-        (map transform-expression args)))
+(defn- transform-some?
+  [sym resolver [_ field expr]]
+  `(let [~sym (~resolver ~sym ~(.name field))]
+     (clojure.core/boolean
+      (clojure.core/some (fn [~sym] ~expr)
+                         ~sym))))
 
-;;; expressions
+(defn- transform-field
+  [sym resolver field]
+  `(~resolver ~sym ~(.name field)))
 
-(defn- transform-expression
-  [expr]
-  (if (zf/condition? expr)
-    (transform-condition expr)
-    (transform-operation expr)))
+(defn- transform-node
+  [sym resolver node]
+  (cond
+    (coll? node)
+    (let [op (first node)]
+      (cond
+        (#{:and :or :not} op)
+        (transform-logical-operator node)
+
+        (= :satisfies? op)
+        (transform-satisfies? sym resolver node)
+
+        (= :some? op)
+        (transform-some? sym resolver node)
+
+        (#{:nil? :< :<= := :> :>= :starts-with? :ends-with? :includes? :in? :between?} op)
+        (transform-condition node)
+
+        :else
+        node))
+
+    (zs/field? node)
+    (transform-field sym resolver node)
+
+    :else
+    node))
 
 (defn translate-expression
   "Translates symbolic expression `expr` into a symbolic form
@@ -82,25 +95,21 @@
    Throws an `ExceptionInfo` with message \"Invalid expression.\" if `expr` is
    not a valid expression. The exception contains additional information:
    - `:expr` - The invalid expression
-   - `:explanation` - A string explaining why the expression doesn't match the
-     spec
-   - `:spec` - The spec that was used for validation"
+   - `:explanation` - A string explaining why the expression doesn't match
+     zeef's expression syntax"
   ([expr]
    (translate-expression expr get))
   ([expr resolver]
    (when-not (zf/expression? expr)
      (throw (ex-info "Invalid expression."
                      {:expr expr
-                      :explanation (s/explain-str ::zs/expression expr)
-                      :spec ::zs/expression})))
-   (let [m (gensym)]
-     `(fn [~m]
-        ~(walk/postwalk
-          (fn [node]
-            (if (instance? Field node)
-              `(~resolver ~m ~(.name node))
-              node))
-          (transform-expression expr))))))
+                      :explanation (-> (m/explain zs/ExpressionSchema expr)
+                                       me/humanize)})))
+   (let [sym (gensym "m")]
+     `(fn [~sym]
+        ~(walk/prewalk
+          (partial transform-node sym resolver)
+          expr)))))
 
 (defn compile-expression
   "Compiles symbolic expression `expr` into a predicate function.
@@ -119,12 +128,21 @@
    - `(compile-expression expr)` uses `clojure.core/get` as the default resolver.
    - `(compile-expression expr resolver)` allows specifying a custom resolver.
 
+   Since the compiled expression is evaluated using `clojure.core/eval`, the
+   resolver must be a symbol that can be resolved at evaluation time. This means:
+   - Anonymous functions cannot be used as resolvers
+   - Local variables or closures cannot be used as resolvers
+   - Only globally accessible functions, vars, or fully qualified symbols work
+   - The resolver symbol is embedded in the generated code and resolved during eval
+
+   For dynamic resolvers, consider using a global var that you can rebind, or
+   use `translate-expression` directly and handle evaluation in your own context.
+
    Throws an `ExceptionInfo` with message \"Invalid expression.\" if `expr` is
    not a valid expression. The exception contains additional information:
    - `:expr` - The invalid expression
    - `:explanation` - A string explaining why the expression doesn't match the
-     spec
-   - `:spec` - The spec that was used for validation
+      zeef's expression syntax
 
    Example:
 
