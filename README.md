@@ -1,6 +1,6 @@
 # Zeef
 
-zeef is a **lingua franca** for filter expressions in Clojure. It provides a unified and declarative way to define and evaluate conditions and logical expressions.
+zeef is a DSL for filter expressions in Clojure. It provides a unified and declarative way to define and evaluate conditions and logical expressions.
 
 ## Installation
 
@@ -39,7 +39,7 @@ Here is an example of how to use zeef:
 
 (def my-filter
   (zf/z-and
-    (zf/z-< (z/field :age) 30)
+    (zf/z-< (zf/field :age) 30)
     (zf/z-starts-with? (zf/field :name) "A")))
 
 (println "Filter expression is valid:" (zf/expression? my-filter))

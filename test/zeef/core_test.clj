@@ -43,7 +43,7 @@
 
 (defn- test-exception
   "Tests that function `f` throws an exception of type `ex-type` when called
-   with arguments generated from `gens`.
+   with  arguments generated from `gens`.
    
    Runs `num-tests` test cases and fails if any call to `f` either doesn't
    throw or throws a different exception type."
@@ -117,7 +117,6 @@
   (testing "a -> true
             a = Field"
     (run-test-cases true? zf/field? valid-field?-args))
-
   (testing "a -> false
             a ∈ Values ∪ {Collection, Expression, NonArgument}"
     (run-test-cases false? zf/field? invalid-field?-args)))
@@ -144,7 +143,7 @@
 
 ;;; expression?
 
-(def ^:private valid-expression?-args [::zs/expression])
+(def ^:private valid-expression?-args [::zs/condition])
 
 (def ^:private invalid-expression?-args [::zs/value
                                          ::zs/field
@@ -161,7 +160,7 @@
             a = Expression ⇒ a ≠ Condition"
     (run-test-cases false? zf/expression? invalid-expression?-args)))
 
-;;; test conditions
+;;;; test conditions
 
 ;;; nil?
 
@@ -192,8 +191,7 @@
   (difference (all-spec-combinations 2) valid-compare-fn-args))
 
 (deftest test-compare-functions
-  (letfn [(test
-            [f]
+  (letfn [(test [f]
             (testing "a -> b -> Condition
                       a, b ∈  Values ∪ {Field}
                       (a ∈ Values ∧ b ∈ Values) ⇒ a = b"
@@ -229,8 +227,7 @@
   (difference (all-spec-combinations 2) valid-string-fn-args))
 
 (deftest test-string-functions
-  (letfn [(test
-            [f]
+  (letfn [(test [f]
             (testing "a -> b -> Condition
                       a, b ∈ {String, Field}"
               (run-test-cases zf/condition? f valid-string-fn-args))
@@ -252,8 +249,8 @@
 ;;; test collection functions
 
 (def ^:private valid-collection-fn-args
-  (into #{} (map (fn [spec]
-                   [spec ::zs/collection])
+  (into #{} (map (fn [x]
+                   [x ::zs/collection])
                  (cons ::zs/field value-specs))))
 
 (def ^:private invalid-collection-fn-args
@@ -334,8 +331,7 @@
             (repeat expr-count ::zs/expression))))
 
 (deftest test-nary-logical-functions
-  (letfn [(test
-            [f]
+  (letfn [(test [f]
             (testing "[a] -> Expression
                       a = Expression"
               (run-test-cases zf/expression? f valid-nary-logical-fn-args))

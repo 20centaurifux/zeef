@@ -16,14 +16,14 @@
                   (Field. k))
                 gen/keyword))))
 
-(s/def ::value
-  (s/or :string string?
-        :int integer?
-        :boolean boolean?
-        :float float?
-        :datetime inst?
-        :uuid uuid?
-        :keyword keyword?))
+(s/def ::value (s/or
+                :string string?
+                :int integer?
+                :boolean boolean?
+                :float float?
+                :datetime inst?
+                :uuid uuid?
+                :keyword keyword?))
 
 (s/def ::collection
   (s/with-gen
@@ -46,20 +46,21 @@
 (s/def ::binary-compare-condition-name #{:< :<= := :> :>=})
 
 (s/def ::binary-compare-condition
-  (s/or :value-value (s/and (s/cat :fname ::binary-compare-condition-name
-                                   :arg1 ::value
-                                   :arg2 ::value)
-                            (fn [{[t] :arg1 [t2] :arg2}]
-                              (= t t2)))
-        :field-value (s/cat :fname ::binary-compare-condition-name
-                            :arg1 ::field
-                            :arg2 ::value)
-        :value-field (s/cat :fname ::binary-compare-condition-name
-                            :arg1 ::value
-                            :arg2 ::field)
-        :field-field (s/cat :fname ::binary-compare-condition-name
-                            :arg1 ::field
-                            :arg2 ::field)))
+  (s/or
+   :value-value (s/and (s/cat :fname ::binary-compare-condition-name
+                              :arg1 ::value
+                              :arg2 ::value)
+                       (fn [{[t] :arg1 [t2] :arg2}]
+                         (= t t2)))
+   :field-value (s/cat :fname ::binary-compare-condition-name
+                       :arg1 ::field
+                       :arg2 ::value)
+   :value-field (s/cat :fname ::binary-compare-condition-name
+                       :arg1 ::value
+                       :arg2 ::field)
+   :field-field (s/cat :fname ::binary-compare-condition-name
+                       :arg1 ::field
+                       :arg2 ::field)))
 
 (s/def ::binary-string-condition-name #{:starts-with? :ends-with? :includes?})
 
@@ -86,51 +87,52 @@
 
 (s/def ::ternary-range-condition
   (s/with-gen
-    (s/or :value-value-value (s/and (s/cat :fname ::ternary-range-condition-name
-                                           :arg1 ::value
-                                           :arg2 ::value
-                                           :arg3 ::value)
-                                    (fn [{[t1 _] :arg1
-                                          [t2 _] :arg2
-                                          [t3 _] :arg3}]
-                                      (= t1 t2 t3)))
-          :field-value-value (s/and (s/cat :fname ::ternary-range-condition-name
-                                           :arg1 ::field
-                                           :arg2 ::value
-                                           :arg3 ::value)
-                                    (fn [{[t1 _] :arg2
-                                          [t2 _] :arg3}]
-                                      (= t1 t2)))
-          :value-field-value (s/and (s/cat :fname ::ternary-range-condition-name
-                                           :arg1 ::value
-                                           :arg2 ::field
-                                           :arg3 ::value)
-                                    (fn [{[t1 _] :arg1
-                                          [t2 _] :arg3}]
-                                      (= t1 t2)))
-          :value-value-field (s/and (s/cat :fname ::ternary-range-condition-name
-                                           :arg1 ::value
-                                           :arg2 ::value
-                                           :arg3 ::field)
-                                    (fn [{[t1 _] :arg1
-                                          [t2 _] :arg2}]
-                                      (= t1 t2)))
-          :value-field-field (s/cat :fname ::ternary-range-condition-name
-                                    :arg1 ::value
-                                    :arg2 ::field
-                                    :arg3 ::field)
-          :field-value-field (s/cat :fname ::ternary-range-condition-name
-                                    :arg1
-                                    ::field :arg2
-                                    ::value :arg3 ::field)
-          :field-field-value (s/cat :fname ::ternary-range-condition-name
-                                    :arg1 ::field
-                                    :arg2 ::field
-                                    :arg3 ::value)
-          :field-field-field (s/cat :fname ::ternary-range-condition-name
-                                    :arg1 ::field
-                                    :arg2 ::field
-                                    :arg3 ::field))
+    (s/or
+     :value-value-value (s/and (s/cat :fname ::ternary-range-condition-name
+                                      :arg1 ::value
+                                      :arg2 ::value
+                                      :arg3 ::value)
+                               (fn [{[t1 _] :arg1
+                                     [t2 _] :arg2
+                                     [t3 _] :arg3}]
+                                 (= t1 t2 t3)))
+     :field-value-value (s/and (s/cat :fname ::ternary-range-condition-name
+                                      :arg1 ::field
+                                      :arg2 ::value
+                                      :arg3 ::value)
+                               (fn [{[t1 _] :arg2
+                                     [t2 _] :arg3}]
+                                 (= t1 t2)))
+     :value-field-value (s/and (s/cat :fname ::ternary-range-condition-name
+                                      :arg1 ::value
+                                      :arg2 ::field
+                                      :arg3 ::value)
+                               (fn [{[t1 _] :arg1
+                                     [t2 _] :arg3}]
+                                 (= t1 t2)))
+     :value-value-field (s/and (s/cat :fname ::ternary-range-condition-name
+                                      :arg1 ::value
+                                      :arg2 ::value
+                                      :arg3 ::field)
+                               (fn [{[t1 _] :arg1
+                                     [t2 _] :arg2}]
+                                 (= t1 t2)))
+     :value-field-field (s/cat :fname ::ternary-range-condition-name
+                               :arg1 ::value
+                               :arg2 ::field
+                               :arg3 ::field)
+     :field-value-field (s/cat :fname ::ternary-range-condition-name
+                               :arg1
+                               ::field :arg2
+                               ::value :arg3 ::field)
+     :field-field-value (s/cat :fname ::ternary-range-condition-name
+                               :arg1 ::field
+                               :arg2 ::field
+                               :arg3 ::value)
+     :field-field-field (s/cat :fname ::ternary-range-condition-name
+                               :arg1 ::field
+                               :arg2 ::field
+                               :arg3 ::field))
     (fn []
       (gen/bind (gen/elements [string?
                                integer?
@@ -146,9 +148,10 @@
 
 (s/def ::ternary-condition ::ternary-range-condition)
 
-(s/def ::condition (s/or :unary ::unary-condition
-                         :binary ::binary-condition
-                         :ternary ::ternary-condition))
+(s/def ::condition (s/or
+                    :unary ::unary-condition
+                    :binary ::binary-condition
+                    :ternary ::ternary-condition))
 
 ;;;; logical operators
 
@@ -171,13 +174,15 @@
    :arg1 ::expression
    :many (s/* ::expression)))
 
-(s/def ::logical-operator (s/or :unary ::unary-logical-operator
-                                :nary ::nary-logical-operator))
+(s/def ::logical-operator (s/or
+                           :unary ::unary-logical-operator
+                           :nary ::nary-logical-operator))
 
 (s/def ::expression
   (s/with-gen
-    (s/or :condition ::condition
-          :logical ::logical-operator)
+    (s/or
+     :condition ::condition
+     :logical ::logical-operator)
     (fn []
       (letfn [(expression-gen
                 [depth]
