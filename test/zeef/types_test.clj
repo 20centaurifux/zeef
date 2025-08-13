@@ -9,6 +9,9 @@
 (def ^:private num-tests 50)
 
 (defn- test-property
+  "Runs a generative test property and asserts it passes.
+  
+  Executes `num-tests` test cases and fails if any test case fails."
   [prop]
   (let [result (tc/quick-check num-tests prop)]
     (is (:pass? result)
@@ -18,20 +21,20 @@
 ;;;; Field type tests
 
 (deftest test-field-creation
-  (testing "Field creation with"
+  (testing "Field can be created with keyword name"
     (let [field (Field. :test)]
       (is (instance? Field field))
       (is (= :test (.name field))))))
 
 (deftest test-field-string-representation
-  (testing "toString method"
+  (testing "toString method returns tagged literal format"
     (test-property
      (prop/for-all [kw gen/keyword]
        (let [field (Field. kw)
              expected (str "#zeef/field " kw)]
          (= expected (str field))))))
 
-  (testing "print-method"
+  (testing "print-method outputs tagged literal format"
     (test-property
      (prop/for-all [kw gen/keyword]
        (let [field (Field. kw)
@@ -39,7 +42,7 @@
          (= expected (pr-str field)))))))
 
 (deftest test-str-vs-pr-str-consistency
-  (testing "str and pr-str return same value"
+  (testing "str and pr-str produce identical output for Fields"
     (test-property
      (prop/for-all [kw gen/keyword]
        (let [field (Field. kw)]
@@ -48,7 +51,7 @@
 ;;;; Reader function tests
 
 (deftest test-read-field
-  (testing "read-field with keyword name"
+  (testing "read-field creates Field from keyword string"
     (test-property
      (prop/for-all [kw gen/keyword]
        (let [kw-str (name kw)
@@ -56,15 +59,15 @@
          (and (instance? Field field)
               (= kw (.name field)))))))
 
-  (testing "read-field with namespace qualified keyword"
+  (testing "read-field handles namespace-qualified keywords"
     (let [field (zt/read-field "ns/test")]
       (is (instance? Field field))
       (is (= :ns/test (.name field))))))
 
-;;;; Serialization/Deserialization tests
+;;;; Serialization and deserialization tests
 
 (deftest test-serialization-roundtrip
-  (testing "Field serialization roundtrip"
+  (testing "Field survives serialization and deserialization roundtrip"
     (test-property
      (prop/for-all [kw gen/keyword]
        (let [original-field (Field. kw)
@@ -73,7 +76,7 @@
          (and (instance? Field deserialized)
               (= (.name original-field) (.name deserialized)))))))
 
-  (testing "Complex data with Field serialization"
+  (testing "Complex data structures with Fields serialize correctly"
     (let [data [:and [:= (Field. :age) 25] [:> (Field. :score) 80]]
           serialized (pr-str data)
           deserialized (zt/read-string serialized)]
@@ -91,13 +94,13 @@
         (is (= val2 80))))))
 
 (deftest test-read-string-with-fields
-  (testing "Simple field deserialization"
+  (testing "Single field can be deserialized from tagged literal"
     (let [serialized "#zeef/field :name"
           field (zt/read-string serialized)]
       (is (instance? Field field))
       (is (= :name (.name field)))))
 
-  (testing "Field in vector deserialization"
+  (testing "Field within vector can be deserialized correctly"
     (let [serialized "[:= #zeef/field :age 30]"
           result (zt/read-string serialized)]
       (is (vector? result))
@@ -107,7 +110,7 @@
       (is (= :age (.name (second result))))
       (is (= 30 (nth result 2)))))
 
-  (testing "Nested structure with multiple fields"
+  (testing "Nested structures with multiple fields deserialize properly"
     (let [serialized "[:and [:= #zeef/field :name \"Alice\"] [:> #zeef/field :age 18]]"
           result (zt/read-string serialized)]
       (is (vector? result))
@@ -118,21 +121,21 @@
 ;;;; Error handling tests
 
 (deftest test-error-handling
-  (testing "Invalid EDN without zeef readers"
+  (testing "Reading tagged literal without zeef readers throws exception"
     (is (thrown? Exception
                  (clojure.edn/read-string "#zeef/field :test"))))
 
-  (testing "Empty string"
+  (testing "Reading empty string throws exception"
     (is (thrown? Exception
                  (zt/read-string ""))))
 
-  (testing "Invalid EDN"
+  (testing "Reading malformed EDN throws exception"
     (is (thrown? Exception
                  (zt/read-string "[invalid edn")))))
 
 ;;;; Reader map tests
 
 (deftest test-readers-map
-  (testing "readers contains zeef/field"
+  (testing "Reader map contains zeef/field entry"
     (is (contains? zt/readers 'zeef/field))
     (is (= zt/read-field (get zt/readers 'zeef/field)))))

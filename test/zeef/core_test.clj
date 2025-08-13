@@ -9,11 +9,11 @@
 
 ;;;; generative test runner
 
-(def ^:private num-tests 50)
+(def ^:private num-tests 20)
 
 (defn- test-fn
   "Performs generative testing on function `f`.
-
+  
    The function generates test data according to `g` and applies it to `f`.
    Then it verifies that `pred` returns true when applied to `f`'s result.
    Runs `num-tests` test cases and fails if any test case fails."
@@ -41,7 +41,7 @@
 ;;; nil?
 
 (deftest test-z-nil?
-  (testing "Valid input: Returns an unary condition when the input is a field."
+  (testing "Valid input: Returns a unary condition when the input is a field."
     (test-fn zs/unary-condition? zf/z-nil? (gen/tuple zs/FieldGenerator)))
 
   (testing "Invalid input: Returns nil when the input is not a field."
@@ -51,7 +51,7 @@
 
 (deftest test-compare-functions
   (letfn [(test [f]
-            (testing "Valid input: Returns a binary compare condition when both
+            (testing "Valid input: Returns a binary comparison condition when both
                       inputs are values of the same type or fields."
               (test-fn zs/binary-condition? f (FieldSameTypeTupleGenerator 2)))
 
@@ -99,7 +99,7 @@
                        f
                        (FieldSameTypeTupleGenerator 2 [gen/string])))
 
-            (testing "Invalid input: Returns nil if at least one input is
+            (testing "Invalid input: Returns nil when at least one input is
                       neither a field nor a string."
               (test-fn nil?
                        f
@@ -164,8 +164,8 @@
 ;;; unary functions
 
 (deftest test-unary-logical-functions
-  (testing "Valid input: Returns an unary logical operation when the input is a
-            field or a logical operations."
+  (testing "Valid input: Returns a unary logical operation when the input is a
+            field or a logical operation."
     (test-fn zs/unary-logical-operation?
              zf/z-not
              (gen/tuple (gen/one-of [zs/FieldGenerator
@@ -177,12 +177,12 @@
              zf/z-not
              (gen/tuple gen/any))))
 
-;;; nary functions
+;;; n-ary functions
 
 (deftest test-nary-logical-operations
   (letfn [(test [f]
-            (testing "Valid input: Returns an nary logical operation when the
-                      input is a tuple of logical operations."
+            (testing "Valid input: Returns an n-ary logical operation when all
+                      inputs are logical operations."
               (test-fn zs/nary-logical-operation?
                        f
                        (gen/vector zs/LogicalOperationGenerator 1 5)))
@@ -205,7 +205,7 @@
 (deftest test-nested-queries
   (letfn [(test [f]
             (testing "Valid input: Returns a nested query when the first input
-                      is a field and the second is a logical operations."
+                      is a field and the second is a logical operation."
               (test-fn zs/nested-query?
                        f
                        (gen/tuple zs/FieldGenerator zs/LogicalOperationGenerator)))

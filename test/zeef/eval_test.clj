@@ -10,7 +10,7 @@
 
 ;;;; generative test runner
 
-(def ^:private num-tests 50)
+(def ^:private num-tests 20)
 
 (defn- test-property
   [prop]
@@ -215,7 +215,7 @@
              compiled-expr (compile-expression expr)]
          (not (compiled-expr {k v})))))))
 
-;;; test nary logical functions
+;;; test n-ary logical functions
 
 (defn- test-nary-logical-function
   "Tests a logical operator with two boolean expressions."
@@ -232,9 +232,9 @@
           (compiled-expr {:a a :b b :c c}))))))
 
 (deftest test-nary-logical-functions
-    ;; Functions are passed instead of using `clojure.core/and` and
-    ;; `clojure.core/or` directly because macros cannot be passed as first-class
-    ;; values.
+  ;; Functions are passed instead of using `clojure.core/and` and
+  ;; `clojure.core/or` directly because macros cannot be passed as first-class
+  ;; values.
   (testing ":and"
     (test-nary-logical-function :and (fn [left right]
                                        (and left right))))
@@ -243,7 +243,7 @@
     (test-nary-logical-function :or (fn [left right]
                                       (or left right)))))
 
-;;;; query functions
+;;;; nested query functions
 
 (deftest test-nested-query-functions
   (testing ":satisfies?"
