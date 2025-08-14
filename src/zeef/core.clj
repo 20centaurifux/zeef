@@ -45,7 +45,7 @@
 ;;; compare functions
 
 (defn-expression z-<
-  "Returns a condition that tests if `a` is less than value `b`.
+  "Returns a condition that tests if `a` is less than `b`.
    Both `a` and `b` must be either a field or a value.
    Returns nil if the expression is invalid."
   [a b])
@@ -106,21 +106,19 @@
 ;;; collection functions
 
 (defn-expression z-in?
-  "Returns a condition that tests if `coll` contains `x`. `x` must be either
-   a field or value.
+  "Returns a condition that tests if `x` is contained in `coll`. `x` must be 
+   either a field or value, and `coll` must be a collection.
    Returns nil if the expression is invalid."
   [x coll])
 
-;;; query functions
-
 (defn-expression z-satisfies?
-  "Returns a condition that tests if (expr field) is logical true.
+  "Returns a condition that tests if `expr` evaluates to logical true when 
+   applied to the value of `field`.
    Returns nil if the expression is invalid."
   [field expr])
 
 (defn-expression z-some?
-  "Returns a condition that tests if `field` contains a logical true value of
-   (expr x).
+  "Returns a condition that tests if any element in `field` satisfies `expr`.
    Returns nil if the expression is invalid."
   [field expr])
 

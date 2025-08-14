@@ -80,17 +80,17 @@
     node))
 
 (defn translate-expression
-  "Translates symbolic expression `expr` into a symbolic form
+  "Translates symbolic expression `expr` into a symbolic form.
     
-   `expr` has to conform to zeef's expression syntax.
+   `expr` must conform to zeef's expression syntax.
    
    If the expression contains fields, these are resolved by calling `resolver`
-   during evaluation. `resolver` is called with the argument passed to the
-   predicate function and the name of the field as a keyword.
+   during evaluation. `resolver` is called with the data being evaluated
+   and the field name as a keyword.
    
    There are two arities:
-   - `(compile-expression expr)` uses `clojure.core/get` as the default resolver.
-   - `(compile-expression expr resolver)` allows specifying a custom resolver.
+   - `(translate-expression expr)` uses `clojure.core/get` as the default resolver.
+   - `(translate-expression expr resolver)` allows specifying a custom resolver.
 
    Throws an `ExceptionInfo` with message \"Invalid expression.\" if `expr` is
    not a valid expression. The exception contains additional information:
@@ -114,11 +114,11 @@
 (defn compile-expression
   "Compiles symbolic expression `expr` into a predicate function.
     
-   `expr` has to conform to zeef's expression syntax.
+   `expr` must conform to zeef's expression syntax.
    
    If the expression contains fields, these are resolved by calling `resolver`
-   during evaluation. `resolver` is called with the argument passed to the
-   predicate function and the name of the field as a keyword.
+   during evaluation. `resolver` is called with the data being evaluated
+   and the field name as a keyword.
    
    Internally, `translate-expression` is used to generate the symbolic form of
    the expression, which is then evaluated using `eval` to produce the predicate
@@ -141,7 +141,7 @@
    Throws an `ExceptionInfo` with message \"Invalid expression.\" if `expr` is
    not a valid expression. The exception contains additional information:
    - `:expr` - The invalid expression
-   - `:explanation` - A string explaining why the expression doesn't match the
+   - `:explanation` - A string explaining why the expression doesn't match
       zeef's expression syntax
 
    Example:

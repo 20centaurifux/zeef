@@ -149,7 +149,7 @@
   [:schema LogicalOperationRegistry
    [:ref ::unary-logical-operator]])
 
-;;; nary
+;;; n-ary
 
 (defschema NaryLogicalOperation
   [:schema LogicalOperationRegistry
