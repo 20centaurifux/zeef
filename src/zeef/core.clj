@@ -111,6 +111,8 @@
    Returns nil if the expression is invalid."
   [x coll])
 
+;;; nested query functions
+
 (defn-expression z-satisfies?
   "Returns a condition that tests if `expr` evaluates to logical true when 
    applied to the value of `field`.
@@ -122,7 +124,7 @@
    Returns nil if the expression is invalid."
   [field expr])
 
-;;;; logical operators
+;;; logical operators
 
 (defn-expression z-not
   "Returns an expression that returns true if `field` is logical false, false
