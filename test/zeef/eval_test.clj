@@ -13,6 +13,9 @@
 (def ^:private num-tests 20)
 
 (defn- test-property
+  "Runs a generative test property and asserts it passes.
+  
+   Executes `num-tests` test cases and fails if any test case fails."
   [prop]
   (let [result (tc/quick-check num-tests prop)]
     (is (:pass? result)
