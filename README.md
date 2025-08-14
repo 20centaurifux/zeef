@@ -6,7 +6,7 @@ Filter expressions in zeef are structured Clojure data that use special field re
 
 Use zeef when you want to define filter logic once and apply it across multiple data sources – from in-memory collections to databases, search engines, and APIs – without rewriting your filtering logic for each backend.
 
-zeef already comes with a built-in evaluation module that compiles filter expressions into predicate functions, enabling seamless integration with standard Clojure collection functions like `filter`, `remove`, and `some`.
+zeef comes with a built-in evaluation module that compiles filter expressions into predicate functions, enabling seamless integration with standard Clojure collection functions like `filter`, `remove`, and `some`.
 
 ## Installation
 
@@ -16,6 +16,29 @@ zeef is available via [Clojars](https://clojars.org/). To use zeef in your proje
 :dependencies [[de.dixieflatline/zeef "0.1.0-SNAPSHOT"]]
 ```
 
+## Quick Start
+
+Here's a simple example to get you started:
+
+```clojure
+(require '[zeef.core :as zf]
+         '[zeef.eval :as ze])
+
+;; Define a filter expression
+(def adult-filter (zf/z->= (zf/field :age) 18))
+
+;; Compile to a predicate function
+(def adult? (ze/compile-expression adult-filter))
+
+;; Use with data
+(adult? {:name "Alice" :age 25}) ; => true
+(adult? {:name "Bob" :age 16})   ; => false
+
+;; Use with collections
+(def people [{:name "Alice" :age 25} {:name "Bob" :age 16}])
+(filter adult? people) ; => ({:name "Alice", :age 25})
+```
+
 ## Building Filter Expressions
 
 Filter expressions in zeef can be:
@@ -23,7 +46,7 @@ Filter expressions in zeef can be:
 - **Logical Expressions** – Combine conditions with AND, OR, NOT
 - **Nested Queries** – Test properties of nested objects or collections
 
-Once defined, filter expressions can be compiled into executable predicate functions using the `zeef.eval` module. However, you can also create custom evaluation modules to translate filter expressions for different data sources (databases, search engines, APIs, etc.), enabling the same filter expressions to work across multiple backends.
+Once defined, filter expressions can be compiled into executable predicate functions using the `zeef.eval` module. You can also create custom evaluation modules to translate filter expressions for different data sources (databases, search engines, APIs, etc.), enabling the same filter expressions to work across multiple backends.
 
 ### Fields
 
@@ -73,7 +96,7 @@ Use `field` to reference data fields:
 - `z-in?` – Tests if a value is in a collection
 
 ```clojure
-(zf/z-in? (zf/field :category) ["tech" "science" "news"]) ; collection contains category
+(zf/z-in? (zf/field :category) ["tech" "science" "news"]) ; category in collection
 ```
 
 #### Range Operations
@@ -139,6 +162,8 @@ The `zeef.eval` module provides the `compile-expression` function that transform
 (age-predicate {:name "Bob" :age 16})   ; => false
 ```
 
+### Custom Resolvers
+
 By default, `compile-expression` uses Clojure's `get` function to resolve field values. You can provide a custom resolver function:
 
 ```clojure
@@ -185,7 +210,7 @@ Use `pr-str` to serialize any zeef filter expression to an EDN string:
 (pred {:age 25 :status "active" :orders [{:amount 150}]}) ; => true
 ```
 
-Always use `zeef.types/read-string` instead of `clojure.edn/read-string` when deserializing, as it includes the necessary reader for the `#zeef/field` tagged literal.
+> **Important:** Always use `zeef.types/read-string` instead of `clojure.edn/read-string` when deserializing, as it includes the necessary reader for the `#zeef/field` tagged literal.
 
 ## Examples
 
